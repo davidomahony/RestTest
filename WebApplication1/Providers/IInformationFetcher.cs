@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 
 namespace WebApplication1.Interfaces
 {
-    public interface IInformationFetcher<T>
+    public interface IInformationFetcher
     {
-        Task<T> FetchInformation(string identifier);
+        Task<object> FetchInformation(string identifier);
+
+        string FetcherIdentifier();
     }
 }

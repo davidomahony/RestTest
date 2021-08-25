@@ -25,7 +25,8 @@ namespace WebApplication1
         {
             services.AddControllers();
 
-            services.AddHttpClient<IInformationFetcher<PokemonSpeciesModel>, PokemonSpeciesInformaitonFetcherr>();
+            services.AddHttpClient<IInformationFetcher, PokemonCharacterisiticsFetcher>();
+            services.AddHttpClient<IInformationFetcher, PokemonSpeciesInformaitonFetcher>();
             services.AddHttpClient<IStringTranslater, YodaTranslater>();
             services.AddHttpClient<IStringTranslater, ShakespeareTranslater>();
 

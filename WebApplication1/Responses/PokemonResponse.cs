@@ -2,23 +2,14 @@
 
 namespace WebApplication1.Responses
 {
-    public class PokemonResponse
+    public class PokemonResponse : BaseResponse
     {
-        public PokemonResponse(PokemonCharacteristicsModel characteristic, PokemonSpeciesModel species)
-            : base ()
-        {
-            this.Name = species.Name;
-            //this.Description = characteristic.Description
-            this.Habitat = species.Habitat;
-            this.IsLegendary = species.IsLegendary;
-        }
+        public string Name { get; set; }
 
-        public string Name { get; }
+        public string Description { get; set; }
 
-        public string Description { get; }
+        public string Habitat { get; set; }
 
-        public string Habitat { get; }
-
-        public bool IsLegendary { get; }
+        public bool IsLegendary { get; set; }
     }
 }

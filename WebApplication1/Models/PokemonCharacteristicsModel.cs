@@ -7,5 +7,6 @@ namespace WebApplication1.Models
 {
     public class PokemonCharacteristicsModel
     {
+        public string Description {get; set;} 
     }
 }

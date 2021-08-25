@@ -18,7 +18,7 @@ namespace WebApplication1.Controllers
         private ILogger<PokemonSpeciesModel> logger;
         private PokemonUtility pokemonUtility;
 
-        public PokemonController(ILogger<PokemonSpeciesModel> logger, IInformationFetcher<PokemonSpeciesModel> informationProvider, IEnumerable<IStringTranslater> translaters)
+        public PokemonController(ILogger<PokemonSpeciesModel> logger, IEnumerable<IInformationFetcher> informationProvider, IEnumerable<IStringTranslater> translaters)
         {
             this.pokemonUtility = new PokemonUtility(informationProvider, translaters);
             this.logger = logger;
@@ -28,16 +28,35 @@ namespace WebApplication1.Controllers
         public async Task<BaseResponse> BasicInformation([Required] string pokemonName)
         {
             Guid requestId = Guid.NewGuid();
+
             this.logger.LogInformation($"PokemonName: {pokemonName}, RequsetId: {requestId}, Call: BasicInformation, Time:{DateTimeOffset.UtcNow}");
-            return null;
+            var pokemonInformation = await this.pokemonUtility.AcquireBasicInformation(pokemonName, requestId);
+
+            return this.BuildPokemonResponse(requestId, pokemonInformation);
         }
 
         [HttpGet("translated/{pokemonName}")]
         public async Task<BaseResponse> TranslatedInformation([Required] string pokemonName)
         {
             Guid requestId = Guid.NewGuid();
+
             this.logger.LogInformation($"PokemonName: {pokemonName}, RequsetId: {requestId}, Call: TranslatedInformation, Time:{DateTimeOffset.UtcNow}");
-            return null;
+            var translatedInformation = await this.pokemonUtility.TranslateDescription(pokemonName, requestId);
+
+            return this.BuildPokemonResponse(requestId, translatedInformation);
+        }
+
+        private BaseResponse BuildPokemonResponse(Guid requestId, BasicPokemonModel basicPokemonModel)
+        {
+            return new PokemonResponse()
+            {
+                RequestId = requestId,
+                RequestTime = DateTime.UtcNow,
+                Name = basicPokemonModel.Name,
+                Habitat = basicPokemonModel.Habitat,
+                IsLegendary = basicPokemonModel.IsLegendary,
+                Description = basicPokemonModel.Description
+            };
         }
     }
 }
