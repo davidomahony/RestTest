@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace WebApplication1.Interfaces
 {
-    public interface IStringTranslater
+    public interface IFetcher<T>
     {
-        string TranslaterIdentifier { get; }
-
-        Task<string> TranslateTo(string input);
+        Task<T> FetchInfo(string identifier);
     }
 }

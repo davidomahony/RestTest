@@ -12,19 +12,19 @@ namespace WebApplication1.Utilities
     public class PokemonUtility
     {
         private readonly IFetcher<PokemonSpeciesModel> pokemonInformationFetcher;
-        private readonly IDictionary<string, IStringTranslater> availableTranslaters;
+        private readonly IDictionary<string, IFetcher<TranslatedModel>> availableTranslaters;
 
-        public PokemonUtility(IFetcher<PokemonSpeciesModel> informationProvider, IEnumerable<IStringTranslater> availableTranslaters)
+        public PokemonUtility(IFetcher<PokemonSpeciesModel> informationProvider, IEnumerable<IFetcher<TranslatedModel>> availableTranslaters)
         {
             this.pokemonInformationFetcher = informationProvider;
-            this.availableTranslaters = availableTranslaters.ToDictionary(item => item.TranslaterIdentifier, item => item); ;
+            this.availableTranslaters = availableTranslaters.ToDictionary(item => item.GetType().Name, item => item); ;
         }
 
         public async Task<PokemonSpeciesModel> AcquireBasicInformation(string pokemonName, Guid requestId)
         {
             try
             {
-                var speciesInformation = await pokemonInformationFetcher.FetchInformation(pokemonName);
+                var speciesInformation = await pokemonInformationFetcher.FetchInfo(pokemonName);
 
                 return speciesInformation;
             }
@@ -55,33 +55,28 @@ namespace WebApplication1.Utilities
             try
             {
                 var englishDescription = basicInfo.flavor_text_entries.First(val => val.language.name.Equals("en", StringComparison.OrdinalIgnoreCase));
+                string result = englishDescription.flavor_text;
+                if (string.IsNullOrEmpty(result))
+                {
+                    throw new NullReferenceException($"Description has no valid value, no need to query translation {requestId}");
+                }
 
                 bool useYoda = basicInfo.is_legendary || (basicInfo.habitat?.name?.Equals("cave", StringComparison.OrdinalIgnoreCase) == true);
+                var translater = useYoda ?
+                    this.availableTranslaters[typeof(YodaTranslater).Name] :
+                    this.availableTranslaters[typeof(ShakespeareTranslater).Name];
+                TranslatedModel translatedResult = await translater.FetchInfo(englishDescription.flavor_text);
 
-                string result = englishDescription.flavor_text;
-                if (this.availableTranslaters.TryGetValue(typeof(YodaTranslater).ToString(), out IStringTranslater yodaTranslater) && useYoda)
+                if (translatedResult != null && !string.IsNullOrEmpty(translatedResult?.contents?.translated))
                 {
-                    result = await yodaTranslater.TranslateTo(englishDescription.flavor_text);
-                }
-                else if (this.availableTranslaters.TryGetValue(typeof(ShakespeareTranslater).ToString(), out IStringTranslater sTranslater))
-                {
-                    result = await sTranslater.TranslateTo(englishDescription.flavor_text);
+                    englishDescription.flavor_text = translatedResult.contents.translation;
+                    return basicInfo;
                 }
 
-                if (!string.IsNullOrEmpty(result))
-                {
-                    englishDescription.flavor_text = result;
-                }
-                else
-                {
-                    // 
-                }
-                
-                return basicInfo;
+                throw new Exception($"Failed to retrieve valid translation {requestId}");
             }
             catch
             {
-                // log this
                 return basicInfo;
             }
         }

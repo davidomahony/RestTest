@@ -28,9 +28,11 @@ namespace WebApplication1
 
             services.AddHttpClient<IFetcher<PokemonSpeciesModel>, PokemonSpeciesFetcher>(cl =>
                 cl.BaseAddress = new Uri(@"https://pokeapi.co/api/v2/pokemon-species/"));
-            services.AddHttpClient<IStringTranslater, YodaTranslater>(cl =>
+
+            services.AddHttpClient<IFetcher<TranslatedModel>, YodaTranslater>(cl =>
                 cl.BaseAddress = new Uri(@"https://api.funtranslations.com/translate/shakespeare.json"));
-            services.AddHttpClient<IStringTranslater, ShakespeareTranslater>(cl =>
+
+            services.AddHttpClient<IFetcher<TranslatedModel>, ShakespeareTranslater>(cl =>
                 cl.BaseAddress = new Uri(@"https://api.funtranslations.com/translate/yoda.json"));
         
             services.AddSingleton<PokemonUtility>();

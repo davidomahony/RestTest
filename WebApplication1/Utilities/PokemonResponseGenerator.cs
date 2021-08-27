@@ -59,7 +59,7 @@ namespace WebApplication1.Utilities
                 RequestId = requestId,
                 RequestTime = DateTime.UtcNow,
                 Name = info.name,
-                Habitat = info.habitat.name, 
+                Habitat = info.habitat?.name ?? string.Empty, 
                 Description = info.flavor_text_entries.First(val => val.language.name.Equals("en", StringComparison.OrdinalIgnoreCase))?.flavor_text ?? string.Empty,
                 IsLegendary = info.is_legendary
             };
