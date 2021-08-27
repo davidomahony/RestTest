@@ -56,10 +56,10 @@ namespace WebApplication1.Utilities
             {
                 var englishDescription = basicInfo.flavor_text_entries.First(val => val.language.name.Equals("en", StringComparison.OrdinalIgnoreCase));
 
-                bool useYoda = basicInfo.is_legendary || basicInfo.habitat.name.Equals("cave", StringComparison.OrdinalIgnoreCase);
+                bool useYoda = basicInfo.is_legendary || (basicInfo.habitat?.name?.Equals("cave", StringComparison.OrdinalIgnoreCase) == true);
 
                 string result = englishDescription.flavor_text;
-                if (this.availableTranslaters.TryGetValue(typeof(YodaTranslater).ToString(), out IStringTranslater yodaTranslater))
+                if (this.availableTranslaters.TryGetValue(typeof(YodaTranslater).ToString(), out IStringTranslater yodaTranslater) && useYoda)
                 {
                     result = await yodaTranslater.TranslateTo(englishDescription.flavor_text);
                 }
@@ -68,7 +68,15 @@ namespace WebApplication1.Utilities
                     result = await sTranslater.TranslateTo(englishDescription.flavor_text);
                 }
 
-                englishDescription.flavor_text = result;
+                if (!string.IsNullOrEmpty(result))
+                {
+                    englishDescription.flavor_text = result;
+                }
+                else
+                {
+                    // 
+                }
+                
                 return basicInfo;
             }
             catch

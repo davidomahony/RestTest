@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
@@ -18,16 +20,20 @@ namespace WebApplication1.Translater
         {
             try
             {
-                var content = new StringContent(@"{ \n text=""" + input + @""" \n }");
+                var body = JsonConvert.SerializeObject(new { text = input });
+                var content = new StringContent(body, Encoding.UTF8, "application/json");
                 var result = await this.client.PostAsync(this.client.BaseAddress.ToString(), content);
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
+                    var responseContent = await result.Content.ReadAsStringAsync();
+                    var translatedObject = JsonConvert.DeserializeObject<TranslatedModel>(responseContent);
+
+                    // null check
+                    return null;
                 }
 
-                // check result
-
-                return null;
+                throw new Exception();
             }
             catch
             {

@@ -7,9 +7,9 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Providers
 {
-    public class PokemonSpeciesInformaitonFetcher : HttpFetcher<PokemonSpeciesModel>
+    public class PokemonSpeciesFetcher : HttpFetcher<PokemonSpeciesModel>
     {
-        public PokemonSpeciesInformaitonFetcher(HttpClient client)
+        public PokemonSpeciesFetcher(HttpClient client)
             : base(client)
         {
         }

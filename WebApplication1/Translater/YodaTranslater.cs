@@ -24,7 +24,11 @@ namespace WebApplication1.Utilities
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
+                    var responseContent = await result.Content.ReadAsStringAsync();
+                    var translatedObject = JsonConvert.DeserializeObject<TranslatedModel>(responseContent);
 
+                    // null check
+                    return translatedObject.contents.translated;
                 }
 
                 // check result

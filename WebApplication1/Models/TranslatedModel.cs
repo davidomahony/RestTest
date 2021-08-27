@@ -9,7 +9,7 @@ namespace WebApplication1.Models
     {
         public Success success { get; set; }
 
-        public Contents content { get; set; }
+        public Contents contents { get; set; }
 
         public class Success
         {
