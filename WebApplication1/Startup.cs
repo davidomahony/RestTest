@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
 using WebApplication1.Providers;
@@ -25,13 +26,14 @@ namespace WebApplication1
         {
             services.AddControllers();
 
-            services.AddHttpClient<IInformationFetcher, PokemonCharacterisiticsFetcher>();
-            services.AddHttpClient<IInformationFetcher, PokemonSpeciesInformaitonFetcher>();
-            services.AddHttpClient<IStringTranslater, YodaTranslater>();
-            services.AddHttpClient<IStringTranslater, ShakespeareTranslater>();
-
-            //services.AddSingleton<IStringTranslater, YodaTranslater>();
-            //services.AddSingleton<IStringTranslater, ShakespeareTranslater>();
+            services.AddHttpClient<IInformationFetcher<PokemonSpeciesModel>, PokemonSpeciesFetcher>(cl =>
+                cl.BaseAddress = new Uri(@"https://pokeapi.co/api/v2/pokemon-species/"));
+            services.AddHttpClient<IStringTranslater, YodaTranslater>(cl =>
+                cl.BaseAddress = new Uri(@"https://api.funtranslations.com/translate/shakespeare.json"));
+            services.AddHttpClient<IStringTranslater, ShakespeareTranslater>(cl =>
+                cl.BaseAddress = new Uri(@"https://api.funtranslations.com/translate/yoda.json"));
+        
+            services.AddSingleton<PokemonUtility>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

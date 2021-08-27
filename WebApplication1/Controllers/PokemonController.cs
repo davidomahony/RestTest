@@ -15,12 +15,12 @@ namespace WebApplication1.Controllers
     [Route("[controller]")]
     public class PokemonController : ControllerBase
     {
-        private ILogger<PokemonSpeciesModel> logger;
-        private PokemonUtility pokemonUtility;
+        private ILogger<PokemonController> logger;
+        private PokemonResponseGenerator pokemonUtility;
 
-        public PokemonController(ILogger<PokemonSpeciesModel> logger, IEnumerable<IInformationFetcher> informationProvider, IEnumerable<IStringTranslater> translaters)
+        public PokemonController(ILogger<PokemonController> logger, PokemonUtility ut)
         {
-            this.pokemonUtility = new PokemonUtility(informationProvider, translaters);
+            this.pokemonUtility = new PokemonResponseGenerator(ut, logger);
             this.logger = logger;
         }
 
@@ -30,9 +30,8 @@ namespace WebApplication1.Controllers
             Guid requestId = Guid.NewGuid();
 
             this.logger.LogInformation($"PokemonName: {pokemonName}, RequsetId: {requestId}, Call: BasicInformation, Time:{DateTimeOffset.UtcNow}");
-            var pokemonInformation = await this.pokemonUtility.AcquireBasicInformation(pokemonName, requestId);
 
-            return this.BuildPokemonResponse(requestId, pokemonInformation);
+            return await this.pokemonUtility.GenerateBasicInformationResponse(pokemonName, requestId);
         }
 
         [HttpGet("translated/{pokemonName}")]
@@ -41,22 +40,8 @@ namespace WebApplication1.Controllers
             Guid requestId = Guid.NewGuid();
 
             this.logger.LogInformation($"PokemonName: {pokemonName}, RequsetId: {requestId}, Call: TranslatedInformation, Time:{DateTimeOffset.UtcNow}");
-            var translatedInformation = await this.pokemonUtility.TranslateDescription(pokemonName, requestId);
 
-            return this.BuildPokemonResponse(requestId, translatedInformation);
-        }
-
-        private BaseResponse BuildPokemonResponse(Guid requestId, BasicPokemonModel basicPokemonModel)
-        {
-            return new PokemonResponse()
-            {
-                RequestId = requestId,
-                RequestTime = DateTime.UtcNow,
-                Name = basicPokemonModel.Name,
-                Habitat = basicPokemonModel.Habitat,
-                IsLegendary = basicPokemonModel.IsLegendary,
-                Description = basicPokemonModel.Description
-            };
+            return await this.pokemonUtility.GenerateTranslationResponse(pokemonName, requestId);
         }
     }
 }

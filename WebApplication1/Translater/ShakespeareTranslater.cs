@@ -14,9 +14,25 @@ namespace WebApplication1.Translater
 
         public ShakespeareTranslater(HttpClient client) => this.client = client;
 
-        public Task<string> TranslateTo(string input)
+        public async Task<string> TranslateTo(string input)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var content = new StringContent(@"{ \n text=""" + input + @""" \n }");
+                var result = await this.client.PostAsync(this.client.BaseAddress.ToString(), content);
+
+                if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                }
+
+                // check result
+
+                return null;
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 

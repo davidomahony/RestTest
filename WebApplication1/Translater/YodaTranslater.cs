@@ -1,4 +1,6 @@
-﻿using System.Net.Http;
+﻿using Newtonsoft.Json;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
@@ -12,9 +14,27 @@ namespace WebApplication1.Utilities
 
         public YodaTranslater(HttpClient client) => this.client = client;
 
-        public Task<string> TranslateTo(string input)
+        public async Task<string> TranslateTo(string input)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                var body = JsonConvert.SerializeObject(new { text = input });
+                var content = new StringContent(body, Encoding.UTF8, "application/json");
+                var result = await this.client.PostAsync(this.client.BaseAddress.ToString(), content);
+
+                if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+
+                }
+
+                // check result
+
+                return null;
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }

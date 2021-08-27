@@ -1,94 +1,81 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
-using WebApplication1.Providers;
 using WebApplication1.Translater;
 
 namespace WebApplication1.Utilities
 {
     public class PokemonUtility
     {
-        private const string CaveHabitat = "cave";
-        private IDictionary<string, IInformationFetcher> pokemonInformationFetchers;
-        private IDictionary<string, IStringTranslater> availableTranslaters;
+        private readonly IFetcher<PokemonSpeciesModel> pokemonInformationFetcher;
+        private readonly IDictionary<string, IStringTranslater> availableTranslaters;
 
-        public PokemonUtility(IEnumerable<IInformationFetcher> informationProvider, IEnumerable<IStringTranslater> availableTranslaters)
+        public PokemonUtility(IFetcher<PokemonSpeciesModel> informationProvider, IEnumerable<IStringTranslater> availableTranslaters)
         {
-            this.pokemonInformationFetchers = informationProvider.ToDictionary(item => item.FetcherIdentifier(), item => item);
+            this.pokemonInformationFetcher = informationProvider;
             this.availableTranslaters = availableTranslaters.ToDictionary(item => item.TranslaterIdentifier, item => item); ;
         }
 
-        public async Task<BasicPokemonModel> AcquireBasicInformation(string pokemonName, Guid requestId)
+        public async Task<PokemonSpeciesModel> AcquireBasicInformation(string pokemonName, Guid requestId)
         {
             try
             {
-                bool locatedSpeciesFetcher = pokemonInformationFetchers.TryGetValue("PokemonSpeciesInformaitonFetcher", out IInformationFetcher speciesFetcher);
-                bool locatedCharacteristicsFetcher = pokemonInformationFetchers.TryGetValue("PokemonCharacterisiticsFetcher", out IInformationFetcher characterisiticsFetcher);
+                var speciesInformation = await pokemonInformationFetcher.FetchInformation(pokemonName);
 
-                if (!locatedCharacteristicsFetcher || !locatedSpeciesFetcher)
-                {
-                    // return some error
-                }
+                return speciesInformation;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+        }
 
-                var speciesInformation = await speciesFetcher.FetchInformation(pokemonName);
-                var characteristicInfo = await characterisiticsFetcher.FetchInformation(pokemonName);
+        public async Task<PokemonSpeciesModel> AcquireTranslatedInformation(string pokemonName, Guid requestId)
+        {
+            try
+            {
+                var basicInfo = await this.AcquireBasicInformation(pokemonName, requestId);
 
-                if (characteristicInfo is PokemonCharacteristicsModel charInfo && speciesInformation is PokemonSpeciesModel specInfo)
-                {
-                    var pokemonBuilder = new BasicPokemonInformationBuilder();
-                    pokemonBuilder.SetCharacteristicInfo(charInfo);
-                    pokemonBuilder.SetSpeciesInfo(specInfo);
-                    return pokemonBuilder.GetResult();
-                }
+                var translatedDescription = await this.TranslateDescription(basicInfo, requestId);
 
-                // throw exception
+                return translatedDescription;
             }
             catch
             {
-
+                throw;
             }
-            return null;
         }
 
-        public async Task<BasicPokemonModel> TranslateDescription(string pokemonName, Guid requestId)
-        {
-            //var informationToTranslate = await this.pokemonInformationFetchers.FetchInformation(pokemonName);
-
-            // string description = await this.TranslateDescription(informationToTranslate);
-
-
-            return null; //informationToTranslate;
-        }
-
-        private async Task<string> TranslateDescription(PokemonSpeciesModel information)
+        public async Task<PokemonSpeciesModel> TranslateDescription(PokemonSpeciesModel basicInfo, Guid requestId)
         {
             try
             {
-                var translater = this.IdentifyTranslater(information);
+                var englishDescription = basicInfo.flavor_text_entries.First(val => val.language.name.Equals("en", StringComparison.OrdinalIgnoreCase));
 
-                return null;//await translater.TranslateTo(information.Description);
-                
+                bool useYoda = basicInfo.is_legendary || basicInfo.habitat.name.Equals("cave", StringComparison.OrdinalIgnoreCase);
+
+                string result = englishDescription.flavor_text;
+                if (this.availableTranslaters.TryGetValue(typeof(YodaTranslater).ToString(), out IStringTranslater yodaTranslater))
+                {
+                    result = await yodaTranslater.TranslateTo(englishDescription.flavor_text);
+                }
+                else if (this.availableTranslaters.TryGetValue(typeof(ShakespeareTranslater).ToString(), out IStringTranslater sTranslater))
+                {
+                    result = await sTranslater.TranslateTo(englishDescription.flavor_text);
+                }
+
+                englishDescription.flavor_text = result;
+                return basicInfo;
             }
-            catch (Exception ex)
+            catch
             {
-                // Log me
-                return null;//information.Description;
+                // log this
+                return basicInfo;
             }
-        }
-
-        private IStringTranslater IdentifyTranslater(PokemonSpeciesModel information)
-        {
-            return null;
-            //if (information.IsLegendary || information.Habitat.Equals(CaveHabitat, System.StringComparison.OrdinalIgnoreCase))
-            //{
-            //    return this.availableTranslaters.First(t => t.TranslaterIdentifier.Equals("YodaTranslater", StringComparison.OrdinalIgnoreCase));
-            //}
-
-            //return this.availableTranslaters.First(t => t.TranslaterIdentifier.Equals("ShakespeareTranslater", StringComparison.OrdinalIgnoreCase));
         }
     }
 }
