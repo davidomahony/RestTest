@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
 
 namespace WebApplication1.Models
 {
+    /// <summary>
+    /// Model which contains neccessary informaiton from translation response
+    /// </summary>
     public class TranslatedModel
     {
         public Success success { get; set; }

@@ -1,55 +1,76 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using WebApplication1.Controllers;
-using WebApplication1.Interfaces;
 using WebApplication1.Models;
-using WebApplication1.Providers;
 using WebApplication1.Responses;
-using WebApplication1.Translater;
 
 namespace WebApplication1.Utilities
 {
     public class PokemonResponseGenerator
     {
-        private readonly PokemonUtility pokemonUtility;
-        private readonly ILogger logger;
+        const string pokemonNotFoungErrMsg = "The pokemon specifieds information does not exist.";
+        private readonly string loggingMessage = "Issue with request {0} at {1} with input: {2}";
+        private readonly PokemonService pokemonUtility;
+        private readonly ILogger<PokemonController> logger;
 
-        public PokemonResponseGenerator(PokemonUtility pokemonUtility, ILogger logger)
+        public PokemonResponseGenerator(PokemonService pokemonUtility, ILogger<PokemonController> logger)
         {
             this.logger = logger;
             this.pokemonUtility = pokemonUtility;
         }
 
-        public async Task<BaseResponse> GenerateBasicInformationResponse(string pokemonName, Guid requestId)
+        public virtual async Task<BaseResponse> GenerateBasicInformationResponse(string pokemonName, Guid requestId)
         {
             try
             {
                 var info = await pokemonUtility.AcquireBasicInformation(pokemonName, requestId);
                 return this.GenerateBasicInfoResponse(info, requestId);
             }
+            catch (PokemonNotFoundException ex)
+            {
+                logger.LogInformation(string.Format(loggingMessage, requestId, DateTime.UtcNow, pokemonName));
+                logger.LogInformation($"Due to pokemon not found exception: {ex.Message}");
+                return this.GenerateErrorResponse(requestId, pokemonNotFoungErrMsg);
+            }
             catch (Exception ex)
             {
-                logger.LogInformation($"Issue with request {requestId} at {DateTime.UtcNow} with input: {pokemonName} due to {ex.Message}");
+                logger.LogInformation(string.Format(loggingMessage, requestId, DateTime.UtcNow, pokemonName));
+                logger.LogInformation($"Due to exception: {ex.Message}");
                 return this.GenerateErrorResponse(pokemonName, requestId);
             }
         }
 
-        public async Task<BaseResponse> GenerateTranslationResponse(string pokemonName, Guid requestId)
+        public virtual async Task<BaseResponse> GenerateTranslationResponse(string pokemonName, Guid requestId)
         {
             try
             {
                 var info = await pokemonUtility.AcquireTranslatedInformation(pokemonName, requestId);
                 return this.GenerateBasicInfoResponse(info, requestId);
             }
+            catch (PokemonNotFoundException ex)
+            {
+                logger.LogInformation(string.Format(loggingMessage, requestId, DateTime.UtcNow, pokemonName));
+                logger.LogInformation($"Due to pokemon not found exception: {ex.Message}");
+                return this.GenerateErrorResponse(requestId, pokemonNotFoungErrMsg);
+            }
             catch (Exception ex)
             {
-                logger.LogInformation($"Issue with request {requestId} at {DateTime.UtcNow} with input: {pokemonName} due to {ex.Message}");
+                logger.LogInformation(string.Format(loggingMessage, requestId, DateTime.UtcNow, pokemonName));
+                logger.LogInformation($"Due to exception: {ex.Message}");
                 return this.GenerateErrorResponse(pokemonName, requestId);
             }
+        }
+
+        public BaseResponse GenerateErrorResponse(Guid requestId, string errMsg)
+        {
+            return new ErrorResponse()
+            {
+                RequestId = requestId,
+                RequestTime = DateTime.UtcNow,
+                ErrorMessage = errMsg,
+            };
         }
 
         private BaseResponse GenerateBasicInfoResponse(PokemonSpeciesModel info, Guid requestId)

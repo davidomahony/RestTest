@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace WebApplication1.Models
 {
+    /// <summary>
+    /// Model which contains neccessary informaiton from pokemon species request
+    /// </summary>
     public class PokemonSpeciesModel
     {
         public string name { get; set; }

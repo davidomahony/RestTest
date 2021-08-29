@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using WebApplication1.Interfaces;
@@ -7,12 +8,21 @@ namespace WebApplication1.Providers
 {
     public abstract class HttpFetcher<T> : IFetcher<T>
     {
+        protected const string apllicationJsonMediaType = "application/json";
         protected HttpClient client;
+        protected string identifier;
+
+        public string FetcherIdentifier { get; protected set; }
 
         public HttpFetcher(HttpClient client) => this.client = client;
 
-        public async Task<T> FetchInfo(string identifier)
+        public virtual async Task<T> FetchInfo(string identifier)
         {
+            if (string.IsNullOrEmpty(identifier))
+            {
+                throw new ArgumentNullException("Null or empty value inputted for Http fetcher");
+            }
+
             try
             {
                 var result = await this.RequestToExecute(identifier);
@@ -28,14 +38,22 @@ namespace WebApplication1.Providers
                     }
                 }
 
-                return default(T);
+                this.HandleNonSuccessResponse(result, identifier);
+
+                return default;
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
+                throw ex;
             }
         }
 
-        public abstract Task<HttpResponseMessage> RequestToExecute(string identifier, HttpContent requestContents = null);
+        protected abstract Task<HttpResponseMessage> RequestToExecute(string identifier);
+
+        protected virtual void HandleNonSuccessResponse(HttpResponseMessage message, string identifier)
+        {
+            throw new System.Exception($"Failed to fetch informaiton for identifier: {identifier}," +
+                $" Resulting Status Code: {message.StatusCode}, reason: {message.ReasonPhrase}");
+        }
     }
 }

@@ -29,13 +29,14 @@ namespace WebApplication1
             services.AddHttpClient<IFetcher<PokemonSpeciesModel>, PokemonSpeciesFetcher>(cl =>
                 cl.BaseAddress = new Uri(@"https://pokeapi.co/api/v2/pokemon-species/"));
 
-            services.AddHttpClient<IFetcher<TranslatedModel>, YodaTranslater>(cl =>
+            services.AddHttpClient<IFetcher<TranslatedModel>, YodaTranslaterFetcher>(cl =>
                 cl.BaseAddress = new Uri(@"https://api.funtranslations.com/translate/shakespeare.json"));
 
-            services.AddHttpClient<IFetcher<TranslatedModel>, ShakespeareTranslater>(cl =>
+            services.AddHttpClient<IFetcher<TranslatedModel>, ShakespeareTranslaterFetcher>(cl =>
                 cl.BaseAddress = new Uri(@"https://api.funtranslations.com/translate/yoda.json"));
         
-            services.AddSingleton<PokemonUtility>();
+            services.AddSingleton<PokemonService>();
+            services.AddSingleton<PokemonResponseGenerator>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
